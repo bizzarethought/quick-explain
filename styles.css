@@ -1,17 +1,36 @@
+:root {
+  --qe-bg: #fff;
+  --qe-color: #111;
+  --qe-border: rgba(0,0,0,0.12);
+  --qe-shadow: 0 6px 18px rgba(0,0,0,0.12);
+  --qe-link: #0366d6;
+  --qe-close: #555;
+}
+
 .quick-explain-popup {
   position: absolute;
   z-index: 999999;
   max-width: 360px;
-  background: #fff;
-  color: #111;
-  border: 1px solid rgba(0,0,0,0.12);
+  background: var(--qe-bg);
+  color: var(--qe-color);
+  border: 1px solid var(--qe-border);
   border-radius: 6px;
   padding: 10px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+  box-shadow: var(--qe-shadow);
   font-size: 13px;
   line-height: 1.4;
   opacity: 0;
-  transition: opacity 120ms ease;
+  transition: opacity 120ms ease, background 120ms ease, color 120ms ease, box-shadow 120ms ease;
+}
+
+/* Dark mode overrides */
+.quick-explain-popup.dark {
+  --qe-bg: #0b1116;
+  --qe-color: #e6edf3;
+  --qe-border: rgba(255,255,255,0.06);
+  --qe-shadow: 0 6px 20px rgba(0,0,0,0.6);
+  --qe-link: #58a6ff;
+  --qe-close: #9aa4b2;
 }
 
 .quick-explain-content {
@@ -27,8 +46,21 @@
 
 .quick-explain-readmore {
   font-size: 12px;
-  color: #0366d6;
+  color: var(--qe-link);
   text-decoration: none;
+}
+
+.quick-explain-theme-toggle {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 8px;
+  color: var(--qe-link);
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .quick-explain-close {
@@ -37,6 +69,13 @@
   cursor: pointer;
   padding: 0;
   margin-left: 8px;
-  color: #555;
+  color: var(--qe-close);
   font-size: 14px;
+}
+
+.quick-explain-close:focus,
+.quick-explain-theme-toggle:focus,
+.quick-explain-readmore:focus {
+  outline: 2px solid rgba(3,102,214,0.3);
+  outline-offset: 2px;
 }

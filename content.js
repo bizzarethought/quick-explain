@@ -2,6 +2,35 @@ let popup = null;
 let autoHideTimer = null;
 let lastSelection = null;
 
+// Theme helpers
+const THEME_KEY = 'quickExplainTheme';
+function getStoredTheme() {
+  try { return localStorage.getItem(THEME_KEY); } catch (e) { return null; }
+}
+
+function systemPrefersDark() {
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
+function getEffectiveTheme() {
+  const s = getStoredTheme();
+  return s === 'light' || s === 'dark' ? s : (systemPrefersDark() ? 'dark' : 'light');
+}
+
+function applyTheme(theme) {
+  if (!popup) return;
+  if (theme === 'dark') popup.classList.add('dark');
+  else popup.classList.remove('dark');
+}
+
+// Listen for system changes when user hasn't chosen a preference
+const _prefMedia = window.matchMedia('(prefers-color-scheme: dark)');
+if (_prefMedia.addEventListener) {
+  _prefMedia.addEventListener('change', (e) => { if (!getStoredTheme()) applyTheme(e.matches ? 'dark' : 'light'); });
+} else if (_prefMedia.addListener) {
+  _prefMedia.addListener((e) => { if (!getStoredTheme()) applyTheme(e.matches ? 'dark' : 'light'); });
+}
+
 // Remove existing popup and any timers
 function removePopup() {
   if (autoHideTimer) {
@@ -64,6 +93,25 @@ function showPopup(rect, { text, title, url }) {
   readMore.rel = "noopener noreferrer";
   readMore.className = "quick-explain-readmore";
 
+  const themeToggle = document.createElement("button");
+  themeToggle.type = "button";
+  themeToggle.className = "quick-explain-theme-toggle";
+  themeToggle.setAttribute('aria-label', 'Toggle color theme');
+
+  function updateToggleLabel() {
+    const current = getStoredTheme() || (systemPrefersDark() ? 'dark' : 'light');
+    themeToggle.textContent = current === 'dark' ? '☀️ Light' : '🌙 Dark';
+  }
+  updateToggleLabel();
+
+  themeToggle.addEventListener('click', () => {
+    const cur = getStoredTheme() || (systemPrefersDark() ? 'dark' : 'light');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+    applyTheme(next);
+    updateToggleLabel();
+  });
+
   const closeBtn = document.createElement("button");
   closeBtn.type = "button";
   closeBtn.innerHTML = "✕";
@@ -73,6 +121,7 @@ function showPopup(rect, { text, title, url }) {
   closeBtn.addEventListener("click", removePopup);
 
   controls.appendChild(readMore);
+  controls.appendChild(themeToggle);
   controls.appendChild(closeBtn);
 
   popup.appendChild(content);
@@ -80,6 +129,9 @@ function showPopup(rect, { text, title, url }) {
 
   // Append hidden. Measure and then position
   document.body.appendChild(popup);
+
+  // Apply theme depending on preference or system
+  applyTheme(getEffectiveTheme());
 
   // Positioning with viewport clamping
   const padding = 8;
