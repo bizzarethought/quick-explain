@@ -1,13 +1,17 @@
 {
   "manifest_version": 3,
   "name": "QuickExplain",
-  "description": "Shows a quick Wikipedia definition for highlighted text.",
+  "description": "Shows quick explanations for highlighted text with customizable source selection and tone options.",
   "version": "1.0",
+  "permissions": [
+    "storage"
+  ],
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
       "js": ["content.js"],
-      "css": ["styles.css"]
+      "css": ["styles.css"],
+      "run_at": "document_end"
     }
   ]
 }
