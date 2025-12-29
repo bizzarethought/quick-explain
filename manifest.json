@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "QuickExplain",
+  "description": "Shows a quick Wikipedia definition for highlighted text.",
+  "version": "1.0",
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["styles.css"]
+    }
+  ]
+}

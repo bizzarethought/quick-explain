@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickExplain Popup Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 50px;
+            line-height: 1.6;
+        }
+        .test-area {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            margin: 20px 0;
+            background: #f9f9f9;
+        }
+        .highlight {
+            background-color: yellow;
+            padding: 2px 4px;
+            cursor: pointer;
+        }
+        .instructions {
+            background: #e7f3ff;
+            padding: 15px;
+            border-left: 4px solid #007bff;
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>QuickExplain Extension Test</h1>
+    
+    <div class="instructions">
+        <h3>Testing Instructions:</h3>
+        <ol>
+            <li>Install the QuickExplain extension</li>
+            <li>Highlight any text below (keep it short - 1-4 words)</li>
+            <li>A popup should appear with information</li>
+            <li>Check the browser console for debug messages</li>
+        </ol>
+    </div>
+
+    <div class="test-area">
+        <h3>Test Text Examples:</h3>
+        <p>Try highlighting: <span class="highlight">JavaScript</span>, <span class="highlight">Wikipedia</span>, <span class="highlight">artificial intelligence</span>, or <span class="highlight">machine learning</span></p>
+        
+        <p>Or try these: <span class="highlight">computer</span>, <span class="highlight">internet</span>, <span class="highlight">programming</span>, <span class="highlight">web development</span></p>
+        
+        <p>Longer phrases: <span class="highlight">software engineering</span>, <span class="highlight">data science</span>, <span class="highlight">blockchain technology</span></p>
+    </div>
+
+    <div class="test-area">
+        <h3>Manual Test Buttons:</h3>
+        <button onclick="simulateSelection('JavaScript')">Test: JavaScript</button>
+        <button onclick="simulateSelection('Wikipedia')">Test: Wikipedia</button>
+        <button onclick="simulateSelection('AI')">Test: AI</button>
+        <button onclick="simulateSelection('machine learning')">Test: machine learning</button>
+    </div>
+
+    <div class="test-area">
+        <h3>Current Extension Status:</h3>
+        <p><strong>Selection Listener:</strong> <span id="status-listener">Active</span></p>
+        <p><strong>Last Selection:</strong> <span id="status-selection">None</span></p>
+        <p><strong>Console:</strong> Check browser console for debug messages</p>
+    </div>
+
+    <script>
+        // Simulate text selection for testing
+        function simulateSelection(text) {
+            const range = document.createRange();
+            const selection = window.getSelection();
+            
+            // Create a temporary text node
+            const tempNode = document.createTextNode(text);
+            document.body.appendChild(tempNode);
+            
+            range.selectNodeContents(tempNode);
+            selection.removeAllRanges();
+            selection.addRange(range);
+            
+            // Trigger the extension
+            setTimeout(() => {
+                document.body.removeChild(tempNode);
+                selection.removeAllRanges();
+            }, 100);
+            
+            document.getElementById('status-selection').textContent = text;
+        }
+
+        // Monitor selection events
+        document.addEventListener('selectionchange', () => {
+            const selection = window.getSelection();
+            if (selection.toString().trim()) {
+                document.getElementById('status-selection').textContent = selection.toString().trim();
+            }
+        });
+
+        console.log('QuickExplain Test Page Loaded');
+        console.log('Extension should be listening for mouseup and dblclick events');
+    </script>
+</body>
+</html>

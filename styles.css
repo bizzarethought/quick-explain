@@ -1,0 +1,259 @@
+:root {
+  --qe-bg: #fff;
+  --qe-color: #111;
+  --qe-border: rgba(0,0,0,0.12);
+  --qe-shadow: 0 6px 18px rgba(0,0,0,0.12);
+  --qe-link: #0366d6;
+  --qe-close: #555;
+}
+
+.quick-explain-popup {
+  position: fixed;
+  z-index: 9999999;
+  max-width: 360px;
+  background: var(--qe-bg);
+  color: var(--qe-color);
+  border: 1px solid var(--qe-border);
+  border-radius: 6px;
+  padding: 10px;
+  box-shadow: var(--qe-shadow);
+  font-size: 13px;
+  line-height: 1.4;
+  opacity: 0;
+  transition: opacity 120ms ease, background 120ms ease, color 120ms ease, box-shadow 120ms ease;
+  pointer-events: auto;
+}
+
+/* Dark mode overrides */
+.quick-explain-popup.dark {
+  --qe-bg: #0b1116;
+  --qe-color: #e6edf3;
+  --qe-border: rgba(255,255,255,0.06);
+  --qe-shadow: 0 6px 20px rgba(0,0,0,0.6);
+  --qe-link: #58a6ff;
+  --qe-close: #9aa4b2;
+}
+
+.quick-explain-content {
+  word-wrap: break-word;
+}
+
+.quick-explain-source-header {
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--qe-border);
+}
+
+.quick-explain-source-label {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--qe-color);
+  margin-bottom: 4px;
+}
+
+.quick-explain-source-icon {
+  margin-right: 6px;
+  font-size: 14px;
+}
+
+.quick-explain-source-text {
+  font-size: 12px;
+}
+
+.quick-explain-tone-label {
+  font-size: 11px;
+  color: var(--qe-close);
+  font-style: italic;
+}
+
+.quick-explain-controls {
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.quick-explain-readmore {
+  font-size: 12px;
+  color: var(--qe-link);
+  text-decoration: none;
+}
+
+.quick-explain-theme-toggle {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 8px;
+  color: var(--qe-link);
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.quick-explain-close {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 8px;
+  color: var(--qe-close);
+  font-size: 14px;
+}
+
+.quick-explain-settings {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 8px;
+  color: var(--qe-close);
+  font-size: 14px;
+}
+
+.quick-explain-close:focus,
+.quick-explain-theme-toggle:focus,
+.quick-explain-readmore:focus,
+.quick-explain-settings:focus {
+  outline: 2px solid rgba(3,102,214,0.3);
+  outline-offset: 2px;
+}
+
+/* Settings Panel Styles */
+.quick-explain-settings-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000000;
+  padding: 20px;
+}
+
+.quick-explain-settings-panel .quick-explain-settings-section {
+  background: var(--qe-bg);
+  border: 1px solid var(--qe-border);
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: var(--qe-shadow);
+  max-width: 500px;
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.quick-explain-settings-title {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--qe-color);
+}
+
+.quick-explain-settings-subtitle {
+  margin: 0 0 16px 0;
+  font-size: 13px;
+  color: var(--qe-close);
+}
+
+.quick-explain-source-list,
+.quick-explain-tone-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quick-explain-source-item,
+.quick-explain-tone-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid var(--qe-border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.quick-explain-source-item:hover,
+.quick-explain-tone-item:hover {
+  background: var(--qe-bg);
+}
+
+.quick-explain-source-item input,
+.quick-explain-tone-item input {
+  margin-top: 2px;
+  cursor: pointer;
+}
+
+.quick-explain-source-content,
+.quick-explain-tone-content {
+  flex: 1;
+}
+
+.quick-explain-source-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.quick-explain-source-name,
+.quick-explain-tone-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--qe-color);
+}
+
+.quick-explain-source-icon {
+  font-size: 16px;
+}
+
+.quick-explain-source-desc,
+.quick-explain-tone-desc {
+  font-size: 12px;
+  color: var(--qe-close);
+  line-height: 1.4;
+}
+
+.quick-explain-settings-controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.quick-explain-settings-save,
+.quick-explain-settings-cancel {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px solid var(--qe-border);
+  background: var(--qe-bg);
+  color: var(--qe-color);
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 120ms ease;
+}
+
+.quick-explain-settings-save:hover {
+  background: var(--qe-link);
+  color: white;
+  border-color: var(--qe-link);
+}
+
+.quick-explain-settings-cancel:hover {
+  background: var(--qe-close);
+  color: white;
+  border-color: var(--qe-close);
+}
+
+.quick-explain-settings-save:focus,
+.quick-explain-settings-cancel:focus {
+  outline: 2px solid rgba(3,102,214,0.3);
+  outline-offset: 2px;
+}
