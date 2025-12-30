@@ -1,139 +1,86 @@
-<<<<<<< HEAD
-# QuickExplain Browser Extension
+# QuickExplain
 
-A browser extension that provides quick explanations for highlighted text with customizable source selection and tone options.
+Browser extension that shows instant explanations for selected text with multiple knowledge sources.
 
 ## Features
 
-### Source Selection
-Choose from different knowledge sources based on your needs:
+**Multiple Sources**
+- 🤖 Auto (Recommended) - Wikipedia by default
+- 📚 Wikipedia - General summaries
+- 📊 Wikidata - Structured facts
+- 🔗 DBpedia - Linked data abstracts
+- 📖 Dictionary - Definitions and usage
+- 🔤 Wiktionary - Etymology and language details
+- 📘 Open Library - Book information
+- ✨ Numbers & Trivia - Fun facts
 
-- **Auto (Recommended)** 🤖 - Automatically selects the best source based on the highlighted text
-- **Wikipedia** 📚 - General background and concise explanations for people, places, concepts, and events
-- **Wikidata** 📊 - Structured, factual summaries: dates, roles, categories, and relationships
-- **DBpedia** 🔗 - Short abstracts with clean, structured information pulled from linked data
-- **Dictionary** 📖 - Clear definitions, usage, and examples for words and phrases
-- **Wiktionary** 🔤 - Definitions plus etymology, grammar, and historical usage
-- **Open Library** 📘 - Descriptions, authorship, and publication context for books and literary works
-- **Numbers & Trivia** ✨ - Quick, surprising facts about numbers, dates, and figures
+**Customization**
+- Three tone options: Friendly, Academic, Power-User
+- Dark/light theme with system detection
+- Settings panel accessible from popup
 
-### Tone Options
-Customize how the information is presented:
-
-- **More Friendly** - Conversational and approachable tone
-- **More Academic** - Formal and precise language
-- **Power-User / Advanced** - Technical and detailed explanations
-
-### Additional Features
-- Dark/light theme support with system preference detection
-- Settings panel for easy customization
-- Auto-hide functionality (8 seconds)
-- Responsive design that works on different screen sizes
-- Smart selection limits (4 words, 60 characters max for optimal UX)
+**Smart Behavior**
+- Auto-hide after 8 seconds
+- Selection limit: 4 words, 60 characters
+- Responsive positioning
 
 ## Installation
 
-1. Open your browser's extension management page
+1. Open browser extensions page
 2. Enable developer mode
-3. Click "Load unpacked" and select the QuickExplain extension folder
-4. The extension is now active on all websites
+3. Load unpacked extension folder
 
 ## Usage
 
-1. Highlight any text (up to 4 words, 60 characters)
-2. A popup will appear with information about the selected text
-3. Click the ⚙️ settings button to change your source and tone preferences
-4. Use the theme toggle (☀️/🌙) to switch between light and dark modes
-
-## Technical Implementation
-
-### Files Structure
-- `manifest.json` - Extension manifest configuration
-- `content.js` - Main extension logic and popup functionality
-- `styles.css` - Styling for the popup and settings panel
-- `test.html` - Test page for demonstrating functionality
-
-### Key Components
-
-#### Source Management
-```javascript
-const SOURCES = {
-  auto: { label: 'Auto (Recommended)', description: '...', icon: '🤖' },
-  wikipedia: { label: 'Wikipedia — Overview', description: '...', icon: '📚' },
-  // ... others
-};
-
-const TONES = {
-  friendly: { label: 'More Friendly', description: '...' },
-  academic: { label: 'More Academic', description: '...' },
-  poweruser: { label: 'Power-User / Advanced', description: '...' }
-};
-```
-
-#### Data Fetching
-The extension uses a modular approach to fetch data from different sources:
-- `fetchData()` - Routes requests based on selected source
-- Individual fetch functions for each data source
-- Placeholder implementations that can be extended with real APIs
-
-#### Settings Persistence
-User preferences are stored locally using localStorage:
-- `quickExplainSource` - Selected knowledge source
-- `quickExplainTone` - Selected tone preference
-- `quickExplainTheme` - Theme preference (light/dark)
-
-## Customization
-
-### Adding New Sources
-1. Add the source to the `SOURCES` object in `content.js`
-2. Create a corresponding fetch function
-3. Update the `fetchData()` switch statement
-
-### Adding New Tones
-1. Add the tone to the `TONES` object in `content.js`
-2. Update tone-based response formatting as needed
-
-### Styling
-The CSS uses CSS custom properties for easy theming:
-```css
-:root {
-  --qe-bg: #fff;
-  --qe-color: #111;
-  --qe-border: rgba(0,0,0,0.12);
-}
-```
+Select text (≤4 words) → popup appears → click ⚙️ for settings or ☀️/🌙 for theme
 
 ## Browser Compatibility
 
-This extension is built with Manifest V3 and should work in:
-- Chrome 88+
-- Firefox 60+
-- Edge 79+
+- Chrome/Edge (Manifest V3)
+- Firefox (with minor adjustments)
 - Other Chromium-based browsers
 
-## Future Enhancements
+## Project Structure
 
-Potential improvements that could be added:
-- Search history and favorites
-- Keyboard shortcuts for quick access
-- Integration with external knowledge bases
-=======
-# QuickExplain
+```
+quick-explain/
+├── manifest.json    # Extension configuration
+├── content.js       # Core logic and API integrations
+├── styles.css       # Popup and UI styling
+└── README.md        # Documentation
+```
 
-A Chrome extension that shows instant Wikipedia summaries for highlighted text.
+## Technologies
 
-## Features
-- Highlight text to get a Wikipedia summary
-- Double-click a word to see a popup
-- Lightweight and non-intrusive UI
+- Vanilla JavaScript (no dependencies)
+- Chrome Extension Manifest V3
+- REST APIs: Wikipedia, Wikidata, DBpedia, Dictionary, Wiktionary, Open Library, Numbers API
+- CSS Custom Properties for theming
+- LocalStorage for preferences
 
-## Tech Stack
-- JavaScript
-- Chrome Extensions API (Manifest V3)
-- Wikipedia REST API
+## Development
 
-## Roadmap
-- Click outside to close popup
-- Improve popup positioning near screen edges
-- Add AI-powered summaries
->>>>>>> 8eb9c941ebd72cc7c193f31ffc34c7f76db3d408
+1. Clone or download the repository
+2. Make changes to `content.js`, `styles.css`, or `manifest.json`
+3. Reload extension in browser to test changes
+4. Use browser DevTools console for debugging
+
+## Troubleshooting
+
+**Popup not appearing:**
+- Check if text selection is within limits (≤4 words, ≤60 chars)
+- Verify extension is enabled in browser
+- Check browser console for errors
+
+**No data loading:**
+- Verify internet connection
+- Check if APIs are accessible (some may require CORS)
+- Try switching to Wikipedia source in settings
+
+**Settings not saving:**
+- Check browser localStorage permissions
+- Try in normal browsing mode (not incognito)
+
+## License
+
+MIT License - feel free to modify and distribute

@@ -1,13 +1,16 @@
 let popup = null;
 let autoHideTimer = null;
 let lastSelection = null;
+let isInitialized = false;
+let settingsPanel = null;
+let ignoreClickUntil = 0;
 
-// Source selection state
+// Storage keys
 const SOURCE_KEY = 'quickExplainSource';
 const TONE_KEY = 'quickExplainTone';
+const THEME_KEY = 'quickExplainTheme';
 
 // Theme helpers
-const THEME_KEY = 'quickExplainTheme';
 function getStoredTheme() {
   try { return localStorage.getItem(THEME_KEY); } catch (e) { return null; }
 }
@@ -27,13 +30,27 @@ function applyTheme(theme) {
   else popup.classList.remove('dark');
 }
 
+function updateHeaderLabels() {
+  if (!popup) return;
+  const sourceInfo = SOURCES[getStoredSource()] || SOURCES.auto;
+  const toneInfo = TONES[getStoredTone()] || TONES.friendly;
+  const sourceLabel = popup.querySelector('.quick-explain-source-label');
+  const toneLabel = popup.querySelector('.quick-explain-tone-label');
+  if (sourceLabel) {
+    sourceLabel.innerHTML = `<span class="quick-explain-source-icon">${sourceInfo.icon || '🤖'}</span><span class="quick-explain-source-text">${sourceInfo.label || 'Auto (Recommended)'}</span>`;
+  }
+  if (toneLabel) {
+    toneLabel.textContent = toneInfo.label || 'More Friendly';
+  }
+}
+
 // Source selection helpers
 function getStoredSource() {
-  try { return localStorage.getItem(SOURCE_KEY); } catch (e) { return 'auto'; }
+  try { return localStorage.getItem(SOURCE_KEY) || 'auto'; } catch (e) { return 'auto'; }
 }
 
 function getStoredTone() {
-  try { return localStorage.getItem(TONE_KEY); } catch (e) { return 'friendly'; }
+  try { return localStorage.getItem(TONE_KEY) || 'friendly'; } catch (e) { return 'friendly'; }
 }
 
 function setStoredSource(source) {
@@ -44,72 +61,23 @@ function setStoredTone(tone) {
   try { localStorage.setItem(TONE_KEY, tone); } catch (e) {}
 }
 
-// Source definitions
+// Source and tone definitions
 const SOURCES = {
-  auto: {
-    label: 'Auto (Recommended)',
-    description: 'We choose the best source based on what you highlight.',
-    icon: '🤖'
-  },
-  wikipedia: {
-    label: 'Wikipedia — Overview',
-    description: 'General background and concise explanations for people, places, concepts, and events.',
-    icon: '📚'
-  },
-  wikidata: {
-    label: 'Wikidata — Key Facts',
-    description: 'Structured, factual summaries: dates, roles, categories, and relationships.',
-    icon: '📊'
-  },
-  dbpedia: {
-    label: 'DBpedia — Context & Structure',
-    description: 'Short abstracts with clean, structured information pulled from linked data.',
-    icon: '🔗'
-  },
-  dictionary: {
-    label: 'Dictionary — Meaning',
-    description: 'Clear definitions, usage, and examples for words and phrases.',
-    icon: '📖'
-  },
-  wiktionary: {
-    label: 'Wiktionary — Language & Origin',
-    description: 'Definitions plus etymology, grammar, and historical usage.',
-    icon: '🔤'
-  },
-  openlibrary: {
-    label: 'Open Library — Books & Authors',
-    description: 'Descriptions, authorship, and publication context for books and literary works.',
-    icon: '📘'
-  },
-  trivia: {
-    label: 'Numbers & Trivia — Fun Facts',
-    description: 'Quick, surprising facts about numbers, dates, and figures.',
-    icon: '✨'
-  }
+  auto: { label: 'Auto (Recommended)', description: 'Choose the best source automatically.', icon: '🤖' },
+  wikipedia: { label: 'Wikipedia — Overview', description: 'Concise summaries for general topics.', icon: '📚' },
+  wikidata: { label: 'Wikidata — Key Facts', description: 'Structured facts and relationships.', icon: '📊' },
+  dbpedia: { label: 'DBpedia — Context', description: 'Structured abstracts from linked data.', icon: '🔗' },
+  dictionary: { label: 'Dictionary — Meaning', description: 'Definitions and usage.', icon: '📖' },
+  wiktionary: { label: 'Wiktionary — Language', description: 'Definitions plus etymology.', icon: '🔤' },
+  openlibrary: { label: 'Open Library — Books', description: 'Books and authors context.', icon: '📘' },
+  trivia: { label: 'Numbers & Trivia', description: 'Quick, surprising facts.', icon: '✨' }
 };
 
 const TONES = {
-  academic: {
-    label: 'More Academic',
-    description: 'Select the knowledge source that best matches your inquiry — lexical, encyclopedic, factual, or bibliographic.'
-  },
-  friendly: {
-    label: 'More Friendly',
-    description: 'Want a definition? A quick fact? Or a bit of context? Choose the source that fits what you’re curious about.'
-  },
-  poweruser: {
-    label: 'Power-User / Advanced',
-    description: 'Control the knowledge pipeline. Choose which dataset your snippet is generated from.'
-  }
+  friendly: { label: 'More Friendly', description: 'Conversational and approachable tone.' },
+  academic: { label: 'More Academic', description: 'Formal and precise language.' },
+  poweruser: { label: 'Power-User / Advanced', description: 'Technical and detailed explanations.' }
 };
-
-// Listen for system changes when user hasn't chosen a preference
-const _prefMedia = window.matchMedia('(prefers-color-scheme: dark)');
-if (_prefMedia.addEventListener) {
-  _prefMedia.addEventListener('change', (e) => { if (!getStoredTheme()) applyTheme(e.matches ? 'dark' : 'light'); });
-} else if (_prefMedia.addListener) {
-  _prefMedia.addListener((e) => { if (!getStoredTheme()) applyTheme(e.matches ? 'dark' : 'light'); });
-}
 
 // Remove existing popup and any timers
 function removePopup() {
@@ -118,16 +86,21 @@ function removePopup() {
     autoHideTimer = null;
   }
 
+  if (settingsPanel) {
+    settingsPanel.remove();
+    settingsPanel = null;
+  }
+
   if (popup) {
     popup.remove();
     popup = null;
   }
 }
 
-// Fetch data based on selected source
+// Fetch data based on selected source. Wikipedia default.
 async function fetchData(query) {
   const source = getStoredSource();
-  
+
   switch (source) {
     case 'wikipedia':
       return fetchWikipediaSummary(query);
@@ -149,12 +122,18 @@ async function fetchData(query) {
   }
 }
 
-// Fetch Wikipedia summary
 async function fetchWikipediaSummary(query) {
   const apiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
 
   try {
-    const response = await fetch(apiUrl);
+    const response = await fetch(apiUrl, { 
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'QuickExplain-Extension/1.0'
+      }
+    });
+    
     if (!response.ok) {
       return { extract: "No Wikipedia article found.", url: null, title: query };
     }
@@ -168,50 +147,210 @@ async function fetchWikipediaSummary(query) {
   }
 }
 
-// Placeholder functions for other data sources
 async function fetchWikidataSummary(query) {
-  return {
-    extract: `Wikidata summary for "${query}": Structured data about this entity.`,
-    url: `https://www.wikidata.org/wiki/Special:Search?search=${encodeURIComponent(query)}`,
-    title: query
-  };
+  const searchUrl = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(query)}&language=en&format=json&origin=*`;
+  
+  try {
+    const searchResponse = await fetch(searchUrl);
+    if (!searchResponse.ok) {
+      return { extract: `No Wikidata entity found for "${query}".`, url: `https://www.wikidata.org/wiki/Special:Search?search=${encodeURIComponent(query)}`, title: query };
+    }
+    
+    const searchData = await searchResponse.json();
+    if (!searchData.search || searchData.search.length === 0) {
+      return { extract: `No Wikidata entity found for "${query}".`, url: `https://www.wikidata.org/wiki/Special:Search?search=${encodeURIComponent(query)}`, title: query };
+    }
+    
+    const entity = searchData.search[0];
+    const description = entity.description || 'No description available.';
+    const label = entity.label || query;
+    const id = entity.id;
+    
+    let extract = `${label}: ${description}`;
+    if (entity.aliases && entity.aliases.length > 0) {
+      extract += ` Also known as: ${entity.aliases.slice(0, 3).join(', ')}.`;
+    }
+    
+    return {
+      extract,
+      url: `https://www.wikidata.org/wiki/${id}`,
+      title: label
+    };
+  } catch (error) {
+    return { extract: `Error fetching Wikidata for "${query}".`, url: `https://www.wikidata.org/wiki/Special:Search?search=${encodeURIComponent(query)}`, title: query };
+  }
 }
 
 async function fetchDBpediaSummary(query) {
-  return {
-    extract: `DBpedia summary for "${query}": Structured information from Wikipedia.`,
-    url: `http://dbpedia.org/page/${encodeURIComponent(query)}`,
-    title: query
-  };
+  const resource = query.replace(/\s+/g, '_');
+  const apiUrl = `https://dbpedia.org/data/${encodeURIComponent(resource)}.json`;
+  
+  try {
+    const response = await fetch(apiUrl);
+    
+    if (!response.ok) {
+      return { extract: `No DBpedia resource found for "${query}".`, url: `https://dbpedia.org/page/${encodeURIComponent(resource)}`, title: query };
+    }
+    
+    const data = await response.json();
+    const resourceUri = `http://dbpedia.org/resource/${resource}`;
+    const resourceData = data[resourceUri];
+    
+    if (resourceData) {
+      const abstract = resourceData['http://dbpedia.org/ontology/abstract']?.find(item => item.lang === 'en')?.value ||
+                      resourceData['http://www.w3.org/2000/01/rdf-schema#comment']?.find(item => item.lang === 'en')?.value;
+      
+      if (abstract) {
+        return {
+          extract: abstract,
+          url: `https://dbpedia.org/page/${encodeURIComponent(resource)}`,
+          title: query
+        };
+      }
+    }
+    
+    return { extract: `No abstract available for "${query}" in DBpedia.`, url: `https://dbpedia.org/page/${encodeURIComponent(resource)}`, title: query };
+  } catch (error) {
+    return { extract: `Error fetching DBpedia data for "${query}".`, url: `https://dbpedia.org/page/${encodeURIComponent(resource)}`, title: query };
+  }
 }
 
 async function fetchDictionarySummary(query) {
-  return {
-    extract: `"${query}": A word with multiple meanings and uses.`,
-    url: `https://www.merriam-webster.com/dictionary/${encodeURIComponent(query)}`,
-    title: query
-  };
+  const apiUrl = `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(query)}`;
+  
+  try {
+    const response = await fetch(apiUrl);
+    
+    if (!response.ok) {
+      return { extract: `No dictionary definition found for "${query}".`, url: `https://www.merriam-webster.com/dictionary/${encodeURIComponent(query)}`, title: query };
+    }
+    
+    const data = await response.json();
+    if (data && data[0] && data[0].meanings && data[0].meanings[0]) {
+      const meaning = data[0].meanings[0];
+      const partOfSpeech = meaning.partOfSpeech || '';
+      const definition = meaning.definitions[0]?.definition || 'No definition available.';
+      const example = meaning.definitions[0]?.example;
+      
+      let extract = `${query} (${partOfSpeech}): ${definition}`;
+      if (example) extract += ` Example: "${example}"`;
+      
+      return {
+        extract,
+        url: `https://www.merriam-webster.com/dictionary/${encodeURIComponent(query)}`,
+        title: query
+      };
+    }
+    
+    return { extract: `No definition available for "${query}".`, url: `https://www.merriam-webster.com/dictionary/${encodeURIComponent(query)}`, title: query };
+  } catch (error) {
+    return { extract: `Error fetching dictionary data for "${query}".`, url: `https://www.merriam-webster.com/dictionary/${encodeURIComponent(query)}`, title: query };
+  }
 }
 
 async function fetchWiktionarySummary(query) {
-  return {
-    extract: `"${query}": Etymology and linguistic information available.`,
-    url: `https://en.wiktionary.org/wiki/${encodeURIComponent(query)}`,
-    title: query
-  };
+  const apiUrl = `https://en.wiktionary.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
+  
+  try {
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' }
+    });
+    
+    if (!response.ok) {
+      return { extract: `No Wiktionary entry found for "${query}".`, url: `https://en.wiktionary.org/wiki/${encodeURIComponent(query)}`, title: query };
+    }
+    
+    const data = await response.json();
+    return {
+      extract: data.extract || `No definition available for "${query}".`,
+      url: data.content_urls?.desktop?.page || `https://en.wiktionary.org/wiki/${encodeURIComponent(query)}`,
+      title: data.title || query
+    };
+  } catch (error) {
+    return { extract: `Error fetching Wiktionary data for "${query}".`, url: `https://en.wiktionary.org/wiki/${encodeURIComponent(query)}`, title: query };
+  }
 }
 
 async function fetchOpenLibrarySummary(query) {
-  return {
-    extract: `Open Library information for "${query}": Book and author details.`,
-    url: `https://openlibrary.org/search?q=${encodeURIComponent(query)}`,
-    title: query
-  };
+  const apiUrl = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=1`;
+  
+  try {
+    const response = await fetch(apiUrl);
+    
+    if (!response.ok) {
+      return { extract: `No Open Library results found for "${query}".`, url: `https://openlibrary.org/search?q=${encodeURIComponent(query)}`, title: query };
+    }
+    
+    const data = await response.json();
+    if (!data.docs || data.docs.length === 0) {
+      return { extract: `No books or authors found for "${query}" in Open Library.`, url: `https://openlibrary.org/search?q=${encodeURIComponent(query)}`, title: query };
+    }
+    
+    const book = data.docs[0];
+    const title = book.title || query;
+    const author = book.author_name ? book.author_name.join(', ') : 'Unknown author';
+    const year = book.first_publish_year || 'Unknown year';
+    const key = book.key;
+    
+    let extract = `"${title}" by ${author} (${year}).`;
+    if (book.publisher && book.publisher[0]) {
+      extract += ` Publisher: ${book.publisher[0]}.`;
+    }
+    if (book.subject && book.subject.length > 0) {
+      extract += ` Topics: ${book.subject.slice(0, 3).join(', ')}.`;
+    }
+    
+    return {
+      extract,
+      url: `https://openlibrary.org${key}`,
+      title
+    };
+  } catch (error) {
+    return { extract: `Error fetching Open Library data for "${query}".`, url: `https://openlibrary.org/search?q=${encodeURIComponent(query)}`, title: query };
+  }
 }
 
 async function fetchTriviaSummary(query) {
+  // Try to detect if query is a number
+  const numMatch = query.match(/\d+/);
+  
+  if (numMatch) {
+    const num = numMatch[0];
+    const apiUrl = `http://numbersapi.com/${num}/trivia`;
+    
+    try {
+      const response = await fetch(apiUrl);
+      
+      if (response.ok) {
+        const fact = await response.text();
+        return {
+          extract: fact,
+          url: `http://numbersapi.com/${num}`,
+          title: num
+        };
+      }
+    } catch (error) {
+      // Fall through to Wikipedia fallback
+    }
+  }
+  
+  // Fallback to Wikipedia for non-numbers or if numbersapi fails
+  try {
+    const wikiResult = await fetchWikipediaSummary(query);
+    if (wikiResult.extract && !wikiResult.extract.includes('No Wikipedia article')) {
+      return {
+        extract: wikiResult.extract,
+        url: wikiResult.url,
+        title: wikiResult.title
+      };
+    }
+  } catch (error) {
+    // Continue to final fallback
+  }
+  
   return {
-    extract: `Fun fact about "${query}": Did you know this interesting detail?`,
+    extract: `No trivia available for "${query}". Try a number or notable topic.`,
     url: `https://www.google.com/search?q=${encodeURIComponent(query)}+fun+facts`,
     title: query
   };
@@ -220,6 +359,88 @@ async function fetchTriviaSummary(query) {
 function truncate(text, max = 300) {
   if (!text) return text;
   return text.length > max ? text.slice(0, max).trim() + "…" : text;
+}
+
+function showSettingsPanel() {
+  if (!popup) return;
+  if (settingsPanel) settingsPanel.remove();
+
+  // Pause auto-hide while panel is open
+  if (autoHideTimer) {
+    clearTimeout(autoHideTimer);
+    autoHideTimer = null;
+  }
+
+  settingsPanel = document.createElement('div');
+  settingsPanel.className = 'quick-explain-settings-panel';
+
+  const title = document.createElement('div');
+  title.className = 'quick-explain-settings-title';
+  title.textContent = 'Quick Explain Settings';
+
+  const sourceLabel = document.createElement('label');
+  sourceLabel.className = 'quick-explain-settings-label';
+  sourceLabel.textContent = 'Source';
+
+  const sourceSelect = document.createElement('select');
+  sourceSelect.className = 'quick-explain-settings-select';
+  Object.entries(SOURCES).forEach(([key, value]) => {
+    const option = document.createElement('option');
+    option.value = key;
+    option.textContent = value.label;
+    if (getStoredSource() === key) option.selected = true;
+    sourceSelect.appendChild(option);
+  });
+
+  sourceSelect.addEventListener('change', () => {
+    setStoredSource(sourceSelect.value);
+    updateHeaderLabels();
+  });
+
+  const toneLabel = document.createElement('label');
+  toneLabel.className = 'quick-explain-settings-label';
+  toneLabel.textContent = 'Tone';
+
+  const toneSelect = document.createElement('select');
+  toneSelect.className = 'quick-explain-settings-select';
+  Object.entries(TONES).forEach(([key, value]) => {
+    const option = document.createElement('option');
+    option.value = key;
+    option.textContent = value.label;
+    if (getStoredTone() === key) option.selected = true;
+    toneSelect.appendChild(option);
+  });
+
+  toneSelect.addEventListener('change', () => {
+    setStoredTone(toneSelect.value);
+    updateHeaderLabels();
+  });
+
+  const actions = document.createElement('div');
+  actions.className = 'quick-explain-settings-actions';
+
+  const closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.className = 'quick-explain-settings-close';
+  closeBtn.textContent = 'Done';
+  closeBtn.addEventListener('click', () => {
+    if (settingsPanel) {
+      settingsPanel.remove();
+      settingsPanel = null;
+    }
+    autoHideTimer = setTimeout(removePopup, 8000);
+  });
+
+  actions.appendChild(closeBtn);
+
+  settingsPanel.appendChild(title);
+  settingsPanel.appendChild(sourceLabel);
+  settingsPanel.appendChild(sourceSelect);
+  settingsPanel.appendChild(toneLabel);
+  settingsPanel.appendChild(toneSelect);
+  settingsPanel.appendChild(actions);
+
+  popup.appendChild(settingsPanel);
 }
 
 // Create and show popup with viewport clamping
@@ -232,14 +453,12 @@ function showPopup(rect, { text, title, url }) {
   popup.setAttribute("aria-label", title ? `Quick explanation: ${title}` : "Quick explanation");
   popup.setAttribute("tabindex", "0");
 
-  // Source selection header
+  // Source/tone header
   const sourceHeader = document.createElement("div");
   sourceHeader.className = "quick-explain-source-header";
 
-  const currentSource = getStoredSource();
-  const currentTone = getStoredTone();
-  const sourceInfo = SOURCES[currentSource] || SOURCES.auto;
-  const toneInfo = TONES[currentTone] || TONES.friendly;
+  const sourceInfo = SOURCES[getStoredSource()] || SOURCES.auto;
+  const toneInfo = TONES[getStoredTone()] || TONES.friendly;
 
   const sourceLabel = document.createElement("div");
   sourceLabel.className = "quick-explain-source-label";
@@ -252,7 +471,7 @@ function showPopup(rect, { text, title, url }) {
   sourceHeader.appendChild(sourceLabel);
   sourceHeader.appendChild(toneLabel);
 
-  // summary + read-more link + close button
+  // summary + read-more link + controls
   const content = document.createElement("div");
   content.className = "quick-explain-content";
   content.textContent = text;
@@ -266,6 +485,12 @@ function showPopup(rect, { text, title, url }) {
   readMore.target = "_blank";
   readMore.rel = "noopener noreferrer";
   readMore.className = "quick-explain-readmore";
+
+  const closeBtn = document.createElement("button");
+  closeBtn.type = "button";
+  closeBtn.innerHTML = "✕";
+  closeBtn.setAttribute("aria-label", "Close explanation");
+  closeBtn.className = "quick-explain-close";
 
   const themeToggle = document.createElement("button");
   themeToggle.type = "button";
@@ -291,18 +516,10 @@ function showPopup(rect, { text, title, url }) {
   settingsBtn.innerHTML = "⚙️";
   settingsBtn.setAttribute("aria-label", "Change source and tone settings");
   settingsBtn.className = "quick-explain-settings";
-  settingsBtn.title = "Change source and tone settings";
-
   settingsBtn.addEventListener("click", (e) => {
     e.stopPropagation();
     showSettingsPanel();
   });
-
-  const closeBtn = document.createElement("button");
-  closeBtn.type = "button";
-  closeBtn.innerHTML = "✕";
-  closeBtn.setAttribute("aria-label", "Close explanation");
-  closeBtn.className = "quick-explain-close";
 
   closeBtn.addEventListener("click", removePopup);
 
@@ -315,39 +532,42 @@ function showPopup(rect, { text, title, url }) {
   popup.appendChild(content);
   popup.appendChild(controls);
 
-  // Append hidden. Measure and then position
+  // Append to DOM
   document.body.appendChild(popup);
-
-  // Apply theme depending on preference or system
-  applyTheme(getEffectiveTheme());
 
   // Positioning with viewport clamping
   const padding = 8;
   const popupRect = popup.getBoundingClientRect();
-  let top = rect.bottom + padding;
-  let left = rect.left;
 
-  // Not enough space below, show above selection
-  if (top + popupRect.height > window.innerHeight) {
+  // Vertical: below selection, else above, then clamp
+  let top = rect.bottom + padding;
+  if (top + popupRect.height > window.innerHeight - padding) {
     top = rect.top - popupRect.height - padding;
   }
+  // Final vertical clamp to viewport
+  top = Math.max(padding, Math.min(top, window.innerHeight - popupRect.height - padding));
 
-  // Clamp horizontally
-  if (left + popupRect.width > window.innerWidth - padding) {
-    left = window.innerWidth - popupRect.width - padding;
-  }
-  if (left < padding) left = padding;
+  // Horizontal: align left to selection, then clamp
+  let left = rect.left;
+  const maxLeft = window.innerWidth - popupRect.width - padding;
+  left = Math.min(left, maxLeft);
+  left = Math.max(padding, left);
 
-  // Ensure top doesn't go above viewport
-  if (top < padding) top = padding;
+  // Use viewport coordinates (position: fixed)
+  popup.style.top = `${top}px`;
+  popup.style.left = `${left}px`;
 
-  popup.style.top = `${top + window.scrollY}px`;
-  popup.style.left = `${left + window.scrollX}px`;
+  applyTheme(getEffectiveTheme());
 
-  // show
+  // Prevent immediate outside-click dismissal from the same interaction
+  ignoreClickUntil = Date.now() + 200;
+
+  // Show with opacity transition
   requestAnimationFrame(() => {
-    popup.style.opacity = 1;
-    popup.focus();
+    if (popup && popup.parentNode) {
+      popup.style.opacity = '1';
+      popup.focus();
+    }
   });
 
   // Auto-hide
@@ -365,8 +585,8 @@ async function handleSelection(maxWords = 4, maxChars = 60) {
   if (words.length > maxWords || raw.length > maxChars) return removePopup();
 
   // avoid duplicates for same selection
-  if (lastSelection && lastSelection.text === raw) return;
-  lastSelection = { text: raw };
+  if (lastSelection && lastSelection.text === raw && Date.now() - lastSelection.time < 500) return;
+  lastSelection = { text: raw, time: Date.now() };
 
   // bounding rect safely
   let rect = null;
@@ -381,10 +601,6 @@ async function handleSelection(maxWords = 4, maxChars = 60) {
   }
   if (!rect) return removePopup();
 
-  // Debug logging
-  console.log('Selection detected:', raw);
-  console.log('Selection rect:', rect);
-
   // loading placeholder
   showPopup(rect, { text: "Loading…", title: raw, url: null });
 
@@ -393,17 +609,23 @@ async function handleSelection(maxWords = 4, maxChars = 60) {
     const truncated = truncate(extract, 300);
     showPopup(rect, { text: truncated, title, url });
   } catch (error) {
-    console.error('Error fetching data:', error);
     showPopup(rect, { text: "Error loading information.", title: raw, url: null });
   }
 }
 
 // Event listeners
-document.addEventListener("mouseup", () => handleSelection(4, 60));
-document.addEventListener("dblclick", () => handleSelection(4, 60));
+document.addEventListener("mouseup", (e) => {
+  if (popup && popup.contains(e.target)) return;
+  handleSelection(4, 60);
+});
+document.addEventListener("dblclick", (e) => {
+  if (popup && popup.contains(e.target)) return;
+  handleSelection(4, 60);
+});
 
 // close on outside click, Escape, resize/scroll
 document.addEventListener("click", (e) => {
+  if (Date.now() < ignoreClickUntil) return;
   if (!popup) return;
   if (!popup.contains(e.target)) removePopup();
 });
@@ -414,170 +636,3 @@ window.addEventListener("keydown", (e) => {
 
 window.addEventListener("resize", removePopup);
 window.addEventListener("scroll", removePopup, { passive: true });
-
-// Settings panel functionality
-function showSettingsPanel() {
-  const settingsPanel = document.createElement("div");
-  settingsPanel.className = "quick-explain-settings-panel";
-  settingsPanel.setAttribute("role", "dialog");
-  settingsPanel.setAttribute("aria-label", "Source and tone settings");
-
-  const currentSource = getStoredSource() || 'auto';
-  const currentTone = getStoredTone() || 'friendly';
-
-  // Build source selection
-  const sourceSection = document.createElement("div");
-  sourceSection.className = "quick-explain-settings-section";
-  
-  const sourceTitle = document.createElement("h3");
-  sourceTitle.textContent = "Choose your source";
-  sourceTitle.className = "quick-explain-settings-title";
-  
-  const sourceSubtitle = document.createElement("p");
-  sourceSubtitle.textContent = "Different questions need different kinds of answers.";
-  sourceSubtitle.className = "quick-explain-settings-subtitle";
-
-  const sourceList = document.createElement("div");
-  sourceList.className = "quick-explain-source-list";
-
-  Object.entries(SOURCES).forEach(([key, info]) => {
-    const sourceItem = document.createElement("label");
-    sourceItem.className = "quick-explain-source-item";
-    
-    const radio = document.createElement("input");
-    radio.type = "radio";
-    radio.name = "source";
-    radio.value = key;
-    radio.checked = key === currentSource;
-    
-    const sourceContent = document.createElement("div");
-    sourceContent.className = "quick-explain-source-content";
-    
-    const sourceHeader = document.createElement("div");
-    sourceHeader.className = "quick-explain-source-header-row";
-    
-    const sourceName = document.createElement("span");
-    sourceName.className = "quick-explain-source-name";
-    sourceName.textContent = info.label;
-    
-    const sourceIcon = document.createElement("span");
-    sourceIcon.className = "quick-explain-source-icon";
-    sourceIcon.textContent = info.icon;
-    
-    sourceHeader.appendChild(sourceName);
-    sourceHeader.appendChild(sourceIcon);
-    
-    const sourceDesc = document.createElement("div");
-    sourceDesc.className = "quick-explain-source-desc";
-    sourceDesc.textContent = info.description;
-    
-    sourceContent.appendChild(sourceHeader);
-    sourceContent.appendChild(sourceDesc);
-    
-    sourceItem.appendChild(radio);
-    sourceItem.appendChild(sourceContent);
-    
-    sourceList.appendChild(sourceItem);
-  });
-
-  sourceSection.appendChild(sourceTitle);
-  sourceSection.appendChild(sourceSubtitle);
-  sourceSection.appendChild(sourceList);
-
-  // Build tone selection
-  const toneSection = document.createElement("div");
-  toneSection.className = "quick-explain-settings-section";
-  
-  const toneTitle = document.createElement("h3");
-  toneTitle.textContent = "Alternative Tones";
-  toneTitle.className = "quick-explain-settings-title";
-  
-  const toneList = document.createElement("div");
-  toneList.className = "quick-explain-tone-list";
-
-  Object.entries(TONES).forEach(([key, info]) => {
-    const toneItem = document.createElement("label");
-    toneItem.className = "quick-explain-tone-item";
-    
-    const radio = document.createElement("input");
-    radio.type = "radio";
-    radio.name = "tone";
-    radio.value = key;
-    radio.checked = key === currentTone;
-    
-    const toneContent = document.createElement("div");
-    toneContent.className = "quick-explain-tone-content";
-    
-    const toneName = document.createElement("span");
-    toneName.className = "quick-explain-tone-name";
-    toneName.textContent = info.label;
-    
-    const toneDesc = document.createElement("div");
-    toneDesc.className = "quick-explain-tone-desc";
-    toneDesc.textContent = info.description;
-    
-    toneContent.appendChild(toneName);
-    toneContent.appendChild(toneDesc);
-    
-    toneItem.appendChild(radio);
-    toneItem.appendChild(toneContent);
-    
-    toneList.appendChild(toneItem);
-  });
-
-  toneSection.appendChild(toneTitle);
-  toneSection.appendChild(toneList);
-
-  // Controls
-  const controls = document.createElement("div");
-  controls.className = "quick-explain-settings-controls";
-  
-  const saveBtn = document.createElement("button");
-  saveBtn.type = "button";
-  saveBtn.textContent = "Save";
-  saveBtn.className = "quick-explain-settings-save";
-  
-  const cancelBtn = document.createElement("button");
-  cancelBtn.type = "button";
-  cancelBtn.textContent = "Cancel";
-  cancelBtn.className = "quick-explain-settings-cancel";
-
-  controls.appendChild(saveBtn);
-  controls.appendChild(cancelBtn);
-
-  settingsPanel.appendChild(sourceSection);
-  settingsPanel.appendChild(toneSection);
-  settingsPanel.appendChild(controls);
-
-  // Event listeners
-  saveBtn.addEventListener("click", () => {
-    const selectedSource = settingsPanel.querySelector('input[name="source"]:checked').value;
-    const selectedTone = settingsPanel.querySelector('input[name="tone"]:checked').value;
-    
-    setStoredSource(selectedSource);
-    setStoredTone(selectedTone);
-    
-    settingsPanel.remove();
-    // Refresh the main popup to show new settings
-    if (popup) {
-      const rect = popup.getBoundingClientRect();
-      const content = popup.querySelector('.quick-explain-content').textContent;
-      const title = popup.querySelector('.quick-explain-source-text').textContent;
-      showPopup(rect, { text: content, title, url: null });
-    }
-  });
-
-  cancelBtn.addEventListener("click", () => {
-    settingsPanel.remove();
-  });
-
-  // Close on outside click
-  settingsPanel.addEventListener("click", (e) => {
-    if (e.target === settingsPanel) {
-      settingsPanel.remove();
-    }
-  });
-
-  document.body.appendChild(settingsPanel);
-  applyTheme(getEffectiveTheme());
-}
