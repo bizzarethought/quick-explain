@@ -1,6 +1,10 @@
-# QuickExplain
+# QuickExplain v1.0.0
 
-Browser extension that shows instant explanations for selected text with multiple knowledge sources.
+🚀 A lightweight browser extension that provides instant explanations for selected text using multiple knowledge sources.
+
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/bizzarethought/quick-explain)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Manifest](https://img.shields.io/badge/manifest-v3-orange.svg)](https://developer.chrome.com/docs/extensions/mv3/intro/)
 
 ## Features
 
@@ -83,4 +87,4 @@ quick-explain/
 
 ## License
 
-MIT License - feel free to modify and distribute
+MIT License

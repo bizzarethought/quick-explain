@@ -1,11 +1,24 @@
+/**
+ * Quick Explain Extension - Styles
+ * Version: 1.0.0
+ * Description: Styling for popup, settings panel, and theme support
+ */
+
+/* ============================================
+ * CSS Custom Properties (Theme Variables)
+ * ============================================ */
 :root {
   --qe-bg: #fff;
   --qe-color: #111;
-  --qe-border: rgba(0,0,0,0.12);
-  --qe-shadow: 0 6px 18px rgba(0,0,0,0.12);
+  --qe-border: rgba(0, 0, 0, 0.12);
+  --qe-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
   --qe-link: #0366d6;
   --qe-close: #555;
 }
+
+/* ============================================
+ * Main Popup Container
+ * ============================================ */
 
 .quick-explain-popup {
   position: fixed;
@@ -30,7 +43,7 @@
   outline-offset: 2px;
 }
 
-/* Dark mode overrides */
+/* Dark Mode Theme */
 .quick-explain-popup.dark {
   --qe-bg: #0b1116;
   --qe-color: #e6edf3;
@@ -40,11 +53,13 @@
   --qe-close: #9aa4b2;
 }
 
+/* Content Area */
 .quick-explain-content {
   word-wrap: break-word;
   margin-bottom: 12px;
 }
 
+/* Source & Tone Header */
 .quick-explain-source-header {
   display: flex;
   align-items: center;
@@ -70,6 +85,7 @@
   color: var(--qe-color);
 }
 
+/* Control Buttons */
 .quick-explain-controls {
   display: flex;
   justify-content: space-between;
@@ -128,6 +144,7 @@
   color: var(--qe-close);
 }
 
+/* Settings Panel */
 .quick-explain-settings-panel {
   position: absolute;
   top: 100%;

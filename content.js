@@ -1,18 +1,46 @@
+/**
+ * Quick Explain - Content Script
+ * Provides instant explanations for selected text on web pages
+ */
+
+// Load Font Awesome Icons
+const loadFontAwesome = () => {
+  if (!document.querySelector('#quick-explain-fontawesome')) {
+    const link = document.createElement('link');
+    link.id = 'quick-explain-fontawesome';
+    link.rel = 'stylesheet';
+    link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css';
+    link.crossOrigin = 'anonymous';
+    document.head.appendChild(link);
+  }
+};
+loadFontAwesome();
+
+// State Management
 let popup = null;
 let autoHideTimer = null;
 let lastSelection = null;
-let isInitialized = false;
 let settingsPanel = null;
 let ignoreClickUntil = 0;
 
-// Storage keys
+// Constants
 const SOURCE_KEY = 'quickExplainSource';
 const TONE_KEY = 'quickExplainTone';
 const THEME_KEY = 'quickExplainTheme';
+const AUTO_HIDE_DELAY = 8000;
+const CLICK_IGNORE_DELAY = 200;
+const SELECTION_CACHE_DURATION = 500;
+const MAX_WORDS = 4;
+const MAX_CHARS = 60;
+const TRUNCATE_LENGTH = 300;
 
-// Theme helpers
+// Theme Management
 function getStoredTheme() {
-  try { return localStorage.getItem(THEME_KEY); } catch (e) { return null; }
+  try {
+    return localStorage.getItem(THEME_KEY);
+  } catch (e) {
+    return null;
+  }
 }
 
 function systemPrefersDark() {
@@ -26,51 +54,74 @@ function getEffectiveTheme() {
 
 function applyTheme(theme) {
   if (!popup) return;
-  if (theme === 'dark') popup.classList.add('dark');
-  else popup.classList.remove('dark');
+  
+  if (theme === 'dark') {
+    popup.classList.add('dark');
+  } else {
+    popup.classList.remove('dark');
+  }
 }
 
 function updateHeaderLabels() {
   if (!popup) return;
+  
   const sourceInfo = SOURCES[getStoredSource()] || SOURCES.auto;
   const toneInfo = TONES[getStoredTone()] || TONES.friendly;
   const sourceLabel = popup.querySelector('.quick-explain-source-label');
   const toneLabel = popup.querySelector('.quick-explain-tone-label');
+  
   if (sourceLabel) {
-    sourceLabel.innerHTML = `<span class="quick-explain-source-icon">${sourceInfo.icon || '🤖'}</span><span class="quick-explain-source-text">${sourceInfo.label || 'Auto (Recommended)'}</span>`;
+    sourceLabel.innerHTML = `<i class="quick-explain-source-icon ${sourceInfo.icon || 'fa-solid fa-wand-magic-sparkles'}"></i><span class="quick-explain-source-text">${sourceInfo.label || 'Auto (Recommended)'}</span>`;
   }
+  
   if (toneLabel) {
     toneLabel.textContent = toneInfo.label || 'More Friendly';
   }
 }
 
-// Source selection helpers
+// Storage Helpers
 function getStoredSource() {
-  try { return localStorage.getItem(SOURCE_KEY) || 'auto'; } catch (e) { return 'auto'; }
+  try {
+    return localStorage.getItem(SOURCE_KEY) || 'auto';
+  } catch (e) {
+    return 'auto';
+  }
 }
 
 function getStoredTone() {
-  try { return localStorage.getItem(TONE_KEY) || 'friendly'; } catch (e) { return 'friendly'; }
+  try {
+    return localStorage.getItem(TONE_KEY) || 'friendly';
+  } catch (e) {
+    return 'friendly';
+  }
 }
 
 function setStoredSource(source) {
-  try { localStorage.setItem(SOURCE_KEY, source); } catch (e) {}
+  try {
+    localStorage.setItem(SOURCE_KEY, source);
+  } catch (e) {
+    console.warn('Failed to save source preference:', e);
+  }
 }
 
 function setStoredTone(tone) {
-  try { localStorage.setItem(TONE_KEY, tone); } catch (e) {}
+  try {
+    localStorage.setItem(TONE_KEY, tone);
+  } catch (e) {
+    console.warn('Failed to save tone preference:', e);
+  }
 }
 
-// Source and tone definitions
+// Configuration Data
 const SOURCES = {
-  auto: { label: 'Auto (Recommended)', description: 'Choose the best source automatically.', icon: '🤖' },
-  wikipedia: { label: 'Wikipedia — Overview', description: 'Concise summaries for general topics.', icon: '📚' },
-  wikidata: { label: 'Wikidata — Key Facts', description: 'Structured facts and relationships.', icon: '📊' },
-  dbpedia: { label: 'DBpedia — Context', description: 'Structured abstracts from linked data.', icon: '🔗' },
-  dictionary: { label: 'Dictionary — Meaning', description: 'Definitions and usage.', icon: '📖' },
-  wiktionary: { label: 'Wiktionary — Language', description: 'Definitions plus etymology.', icon: '🔤' },
-  openlibrary: { label: 'Open Library — Books', description: 'Books and authors context.', icon: '📘' },
-  trivia: { label: 'Numbers & Trivia', description: 'Quick, surprising facts.', icon: '✨' }
+  auto: { label: 'Auto (Recommended)', description: 'Choose the best source automatically.', icon: 'fa-solid fa-wand-magic-sparkles' },
+  wikipedia: { label: 'Wikipedia — Overview', description: 'Concise summaries for general topics.', icon: 'fa-brands fa-wikipedia-w' },
+  wikidata: { label: 'Wikidata — Key Facts', description: 'Structured facts and relationships.', icon: 'fa-solid fa-database' },
+  dbpedia: { label: 'DBpedia — Context', description: 'Structured abstracts from linked data.', icon: 'fa-solid fa-link' },
+  dictionary: { label: 'Dictionary — Meaning', description: 'Definitions and usage.', icon: 'fa-solid fa-book' },
+  wiktionary: { label: 'Wiktionary — Language', description: 'Definitions plus etymology.', icon: 'fa-solid fa-language' },
+  openlibrary: { label: 'Open Library — Books', description: 'Books and authors context.', icon: 'fa-solid fa-book-open' },
+  trivia: { label: 'Numbers & Trivia', description: 'Quick, surprising facts.', icon: 'fa-solid fa-lightbulb' }
 };
 
 const TONES = {
@@ -79,7 +130,7 @@ const TONES = {
   poweruser: { label: 'Power-User / Advanced', description: 'Technical and detailed explanations.' }
 };
 
-// Remove existing popup and any timers
+// Popup Management
 function removePopup() {
   if (autoHideTimer) {
     clearTimeout(autoHideTimer);
@@ -97,7 +148,7 @@ function removePopup() {
   }
 }
 
-// Fetch data based on selected source. Wikipedia default.
+// Data Fetching
 async function fetchData(query) {
   const source = getStoredSource();
 
@@ -356,11 +407,13 @@ async function fetchTriviaSummary(query) {
   };
 }
 
-function truncate(text, max = 300) {
+// Utility Functions
+function truncate(text, max = TRUNCATE_LENGTH) {
   if (!text) return text;
-  return text.length > max ? text.slice(0, max).trim() + "…" : text;
+  return text.length > max ? text.slice(0, max).trim() + '…' : text;
 }
 
+// Settings Panel
 function showSettingsPanel() {
   if (!popup) return;
   if (settingsPanel) settingsPanel.remove();
@@ -428,7 +481,7 @@ function showSettingsPanel() {
       settingsPanel.remove();
       settingsPanel = null;
     }
-    autoHideTimer = setTimeout(removePopup, 8000);
+    autoHideTimer = setTimeout(removePopup, AUTO_HIDE_DELAY);
   });
 
   actions.appendChild(closeBtn);
@@ -443,12 +496,11 @@ function showSettingsPanel() {
   popup.appendChild(settingsPanel);
 }
 
-// Create and show popup with viewport clamping
 function showPopup(rect, { text, title, url }) {
   removePopup();
 
-  popup = document.createElement("div");
-  popup.className = "quick-explain-popup";
+  popup = document.createElement('div');
+  popup.className = 'quick-explain-popup';
   popup.setAttribute("role", "dialog");
   popup.setAttribute("aria-label", title ? `Quick explanation: ${title}` : "Quick explanation");
   popup.setAttribute("tabindex", "0");
@@ -462,7 +514,7 @@ function showPopup(rect, { text, title, url }) {
 
   const sourceLabel = document.createElement("div");
   sourceLabel.className = "quick-explain-source-label";
-  sourceLabel.innerHTML = `<span class="quick-explain-source-icon">${sourceInfo.icon || '🤖'}</span><span class="quick-explain-source-text">${sourceInfo.label || 'Auto (Recommended)'}</span>`;
+  sourceLabel.innerHTML = `<i class="quick-explain-source-icon ${sourceInfo.icon || 'fa-solid fa-wand-magic-sparkles'}"></i><span class="quick-explain-source-text">${sourceInfo.label || 'Auto (Recommended)'}</span>`;
 
   const toneLabel = document.createElement("div");
   toneLabel.className = "quick-explain-tone-label";
@@ -560,7 +612,7 @@ function showPopup(rect, { text, title, url }) {
   applyTheme(getEffectiveTheme());
 
   // Prevent immediate outside-click dismissal from the same interaction
-  ignoreClickUntil = Date.now() + 200;
+  ignoreClickUntil = Date.now() + CLICK_IGNORE_DELAY;
 
   // Show with opacity transition
   requestAnimationFrame(() => {
@@ -570,25 +622,35 @@ function showPopup(rect, { text, title, url }) {
     }
   });
 
-  // Auto-hide
-  autoHideTimer = setTimeout(removePopup, 8000);
+  // Auto-hide timer
+  autoHideTimer = setTimeout(removePopup, AUTO_HIDE_DELAY);
 }
 
-// Selection handler
-async function handleSelection(maxWords = 4, maxChars = 60) {
+// Selection Handler
+async function handleSelection(maxWords = MAX_WORDS, maxChars = MAX_CHARS) {
   const sel = window.getSelection();
-  if (!sel || sel.isCollapsed || sel.rangeCount === 0) return removePopup();
+  if (!sel || sel.isCollapsed || sel.rangeCount === 0) {
+    return removePopup();
+  }
 
-  const raw = sel.toString().trim().replace(/^[\W_]+|[\W_]+$/g, "");
+  const raw = sel.toString().trim().replace(/^[\W_]+|[\W_]+$/g, '');
   const words = raw.split(/\s+/).filter(Boolean);
-  if (!raw || words.length === 0) return removePopup();
-  if (words.length > maxWords || raw.length > maxChars) return removePopup();
+  
+  if (!raw || words.length === 0) {
+    return removePopup();
+  }
+  
+  if (words.length > maxWords || raw.length > maxChars) {
+    return removePopup();
+  }
 
-  // avoid duplicates for same selection
-  if (lastSelection && lastSelection.text === raw && Date.now() - lastSelection.time < 500) return;
+  // Avoid duplicate requests for same selection
+  if (lastSelection && lastSelection.text === raw && Date.now() - lastSelection.time < SELECTION_CACHE_DURATION) {
+    return;
+  }
   lastSelection = { text: raw, time: Date.now() };
 
-  // bounding rect safely
+  // Get bounding rectangle safely
   let rect = null;
   try {
     rect = sel.getRangeAt(0).getBoundingClientRect();
@@ -599,40 +661,53 @@ async function handleSelection(maxWords = 4, maxChars = 60) {
   } catch (e) {
     return removePopup();
   }
-  if (!rect) return removePopup();
+  
+  if (!rect) {
+    return removePopup();
+  }
 
-  // loading placeholder
-  showPopup(rect, { text: "Loading…", title: raw, url: null });
+  // Show loading placeholder
+  showPopup(rect, { text: 'Loading…', title: raw, url: null });
 
   try {
     const { extract, url, title } = await fetchData(raw);
-    const truncated = truncate(extract, 300);
+    const truncated = truncate(extract);
     showPopup(rect, { text: truncated, title, url });
   } catch (error) {
-    showPopup(rect, { text: "Error loading information.", title: raw, url: null });
+    console.error('Error fetching explanation:', error);
+    showPopup(rect, { text: 'Error loading information.', title: raw, url: null });
   }
 }
 
-// Event listeners
-document.addEventListener("mouseup", (e) => {
+// Event Listeners
+
+// Handle text selection
+document.addEventListener('mouseup', (e) => {
   if (popup && popup.contains(e.target)) return;
-  handleSelection(4, 60);
-});
-document.addEventListener("dblclick", (e) => {
-  if (popup && popup.contains(e.target)) return;
-  handleSelection(4, 60);
+  handleSelection();
 });
 
-// close on outside click, Escape, resize/scroll
-document.addEventListener("click", (e) => {
+document.addEventListener('dblclick', (e) => {
+  if (popup && popup.contains(e.target)) return;
+  handleSelection();
+});
+
+// Close popup on outside click
+document.addEventListener('click', (e) => {
   if (Date.now() < ignoreClickUntil) return;
   if (!popup) return;
-  if (!popup.contains(e.target)) removePopup();
+  if (!popup.contains(e.target)) {
+    removePopup();
+  }
 });
 
-window.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") removePopup();
+// Close popup on Escape key
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    removePopup();
+  }
 });
 
-window.addEventListener("resize", removePopup);
-window.addEventListener("scroll", removePopup, { passive: true });
+// Close popup on window resize or scroll
+window.addEventListener('resize', removePopup);
+window.addEventListener('scroll', removePopup, { passive: true });

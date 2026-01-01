@@ -1,0 +1,57 @@
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# IDE and Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependencies
+node_modules/
+bower_components/
+
+# Build outputs
+dist/
+build/
+*.crx
+*.pem
+*.zip
+quick-explain.zip
+
+# Icons (uncomment if you want to track icons in git)
+# icons/*.png
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Environment and Config
+.env
+.env.local
+.env.*.local
+
+# Package files
+*.tgz
+
+# Test coverage
+coverage/
+.nyc_output/

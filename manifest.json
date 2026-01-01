@@ -1,10 +1,21 @@
 {
   "manifest_version": 3,
   "name": "QuickExplain",
-  "description": "Shows quick explanations for highlighted text with customizable source selection and tone options.",
-  "version": "1.0",
+  "description": "Instant explanations for selected text with multiple knowledge sources including Wikipedia, Wikidata, Dictionary, and more.",
+  "version": "1.0.0",
+  "author": "Garang Kiariga",
+  "homepage_url": "https://github.com/bizzarethought/quick-explain",
   "permissions": [
     "storage"
+  ],
+  "host_permissions": [
+    "https://en.wikipedia.org/*",
+    "https://www.wikidata.org/*",
+    "https://dbpedia.org/*",
+    "https://api.dictionaryapi.dev/*",
+    "https://en.wiktionary.org/*",
+    "https://openlibrary.org/*",
+    "http://numbersapi.com/*"
   ],
   "background": {
     "service_worker": "background.js"
