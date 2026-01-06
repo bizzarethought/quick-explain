@@ -38,11 +38,6 @@
   backdrop-filter: blur(2px);
 }
 
-.quick-explain-popup:focus {
-  outline: 2px solid var(--qe-link);
-  outline-offset: 2px;
-}
-
 /* Dark Mode Theme */
 .quick-explain-popup.dark {
   --qe-bg: #0b1116;
