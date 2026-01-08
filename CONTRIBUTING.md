@@ -103,7 +103,6 @@ feat: Add Google Scholar as new knowledge source
      newsource: {
        label: 'Source Name',
        description: 'Brief description',
-       icon: '📌'
      }
    };
    ```

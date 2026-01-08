@@ -17,8 +17,7 @@ $filesToInclude = @(
     "manifest.json",
     "content.js",
     "styles.css",
-    "background.js",
-    "icons/"
+    "background.js"
 )
 
 # Create the zip archive
@@ -58,15 +57,15 @@ try {
     # Clean up temp directory
     Remove-Item -Recurse -Force $tempDir
 
-    Write-Host "`n✅ Build complete!" -ForegroundColor Green
-    Write-Host "📦 Package: $outputFile" -ForegroundColor Cyan
+    Write-Host "`n Build complete!" -ForegroundColor Green
+    Write-Host "Package: $outputFile" -ForegroundColor Cyan
     
     # Show file size
     $fileSize = (Get-Item $outputFile).Length
     $fileSizeKB = [math]::Round($fileSize / 1KB, 2)
-    Write-Host "📊 Size: $fileSizeKB KB" -ForegroundColor Cyan
+    Write-Host "Size: $fileSizeKB KB" -ForegroundColor Cyan
 
-    Write-Host "`n📋 Next steps:" -ForegroundColor Yellow
+    Write-Host "`n Next steps:" -ForegroundColor Yellow
     Write-Host "  1. Test the packaged extension in Chrome" -ForegroundColor White
     Write-Host "  2. Visit chrome://extensions/" -ForegroundColor White
     Write-Host "  3. Enable Developer Mode" -ForegroundColor White
@@ -74,6 +73,6 @@ try {
     Write-Host "  5. Once tested, upload $outputFile to Chrome Web Store" -ForegroundColor White
 
 } catch {
-    Write-Host "❌ Build failed: $_" -ForegroundColor Red
+    Write-Host "Build failed: $_" -ForegroundColor Red
     exit 1
 }

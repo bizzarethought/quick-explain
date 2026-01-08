@@ -1,12 +1,4 @@
-/**
- * Quick Explain Extension - Styles
- * Version: 1.0.0
- * Description: Styling for popup, settings panel, and theme support
- */
-
-/* ============================================
- * CSS Custom Properties (Theme Variables)
- * ============================================ */
+ /* Custom Theme Variables */
 :root {
   --qe-bg: #fff;
   --qe-color: #111;
@@ -16,9 +8,7 @@
   --qe-close: #555;
 }
 
-/* ============================================
- * Main Popup Container
- * ============================================ */
+/* Main Popup Container */
 
 .quick-explain-popup {
   position: fixed;

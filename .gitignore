@@ -36,9 +36,6 @@ build/
 *.zip
 quick-explain.zip
 
-# Icons (uncomment if you want to track icons in git)
-# icons/*.png
-
 # Temporary files
 *.tmp
 *.temp

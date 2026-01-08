@@ -4,8 +4,6 @@
  * Handles extension lifecycle and messaging
  */
 
-// Extension Installation
-
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
     console.log('QuickExplain v1.0.0 installed successfully');

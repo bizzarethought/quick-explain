@@ -1,24 +1,24 @@
 # QuickExplain v1.0.0 - Project Structure
 
-## 📁 File Structure
+##  File Structure
 
 ```
 quick-explain/
 │
-├── 📄 manifest.json          # Extension configuration (Manifest V3)
-├── 📄 content.js            # Main content script with all logic
-├── 📄 styles.css            # UI styles with dark/light themes
-├── 📄 background.js         # Background service worker
-├── 📄 README.md             # Main documentation
-├── 📄 LICENSE               # MIT License
-├── 📄 CHANGELOG.md          # Version history
-├── 📄 CONTRIBUTING.md       # Contribution guidelines
-├── 📄 RELEASE.md            # Release checklist
-├── 📄 .gitignore            # Git ignore rules
-└── 📄 build.ps1             # Build script (PowerShell)
+├──  manifest.json          # Extension configuration (Manifest V3)
+├──  content.js            # Main content script with all logic
+├──  styles.css            # UI styles with dark/light themes
+├──  background.js         # Background service worker
+├──  README.md             # Main documentation
+├──  LICENSE               # MIT License
+├──  CHANGELOG.md          # Version history
+├──  CONTRIBUTING.md       # Contribution guidelines
+├──  RELEASE.md            # Release checklist
+├──  .gitignore            # Git ignore rules
+└──  build.ps1             # Build script (PowerShell)
 ```
 
-## 🎯 Core Features
+##  Core Features
 
 ### Multi-Source Knowledge
 - **Auto (Recommended)** - Defaults to Wikipedia
@@ -48,7 +48,7 @@ quick-explain/
 - **Error Handling** - Graceful fallbacks
 - **Performance** - Debounced selection handling
 
-## 🔧 Key Code Sections
+##  Key Code Sections
 
 ### content.js (723 lines)
 ```
@@ -99,7 +99,7 @@ Lines 131-193: Settings Panel
 - Element gaps: `8px`
 - Border radius: `6px`
 
-## 🚀 Build & Deploy
+##  Build & Deploy
 
 ### Development
 ```powershell
@@ -127,7 +127,7 @@ Select the quick-explain folder
 4. Complete store listing
 5. Submit for review
 
-## 📊 Performance Metrics
+##  Performance Metrics
 
 - **Extension Size:** ~50-100 KB (with icons)
 - **Memory Usage:** ~5-10 MB
@@ -135,7 +135,7 @@ Select the quick-explain folder
 - **API Response:** 200-800ms (varies by source)
 - **Popup Render:** <50ms
 
-## 🔒 Privacy & Permissions
+##  Privacy & Permissions
 
 ### Required Permissions
 - `storage` - Save user preferences locally
@@ -155,23 +155,23 @@ Select the quick-explain folder
 - No personal information collected
 - Preferences stored in localStorage only
 
-## 🧪 Testing Coverage
+##  Testing Coverage
 
 ### Functional Tests
-✅ All 8 knowledge sources
-✅ Settings persistence
-✅ Theme switching
-✅ Selection limits
-✅ Keyboard shortcuts
-✅ Error handling
+ All 8 knowledge sources
+ Settings persistence
+ Theme switching
+ Selection limits
+ Keyboard shortcuts
+ Error handling
 
 ### Browser Tests
-✅ Chrome (v88+)
-✅ Edge (v88+)
-✅ Opera
-✅ Brave
+ Chrome (v88+)
+ Edge (v88+)
+ Opera
+ Brave
 
-## 📝 Documentation
+## Documentation
 
 ### User Documentation
 - **README.md** - Installation, usage, features
@@ -183,7 +183,7 @@ Select the quick-explain folder
 - **RELEASE.md** - Release checklist
 - **Code Comments** - Inline documentation
 
-## 🎓 Learning Resources
+## Learning Resources
 
 ### APIs Used
 1. **Wikipedia REST API** - https://en.wikipedia.org/api/rest_v1/
@@ -198,7 +198,7 @@ Select the quick-explain folder
 - Chrome Extension Docs: https://developer.chrome.com/docs/extensions/
 - Manifest V3: https://developer.chrome.com/docs/extensions/mv3/intro/
 
-## 🔮 Future Enhancements
+## Future Enhancements
 
 Potential features for v1.1+:
 - [ ] More knowledge sources (Wolfram Alpha, Google Scholar)
@@ -210,7 +210,7 @@ Potential features for v1.1+:
 - [ ] Voice reading option
 - [ ] Related topics suggestions
 
-## ✅ Version 1.0.0 Status
+## Version 1.0.0 Status
 
 **Release Ready:** Yes
 **Date:** December 31, 2025

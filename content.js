@@ -3,7 +3,6 @@
  * Provides instant explanations for selected text on web pages
  */
 
-// Load Font Awesome Icons
 const loadFontAwesome = () => {
   if (!document.querySelector('#quick-explain-fontawesome')) {
     const link = document.createElement('link');

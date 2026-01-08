@@ -1,6 +1,6 @@
 # QuickExplain v1.0.0
 
-🚀 A lightweight browser extension that provides instant explanations for selected text using multiple knowledge sources.
+ A lightweight browser extension that provides instant explanations for selected text using multiple knowledge sources.
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/bizzarethought/quick-explain)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -9,14 +9,14 @@
 ## Features
 
 **Multiple Sources**
-- 🤖 Auto (Recommended) - Wikipedia by default
-- 📚 Wikipedia - General summaries
-- 📊 Wikidata - Structured facts
-- 🔗 DBpedia - Linked data abstracts
-- 📖 Dictionary - Definitions and usage
-- 🔤 Wiktionary - Etymology and language details
-- 📘 Open Library - Book information
-- ✨ Numbers & Trivia - Fun facts
+-  Auto (Recommended) - Wikipedia by default
+-  Wikipedia - General summaries
+-  Wikidata - Structured facts
+-  DBpedia - Linked data abstracts
+-  Dictionary - Definitions and usage
+-  Wiktionary - Etymology and language details
+-  Open Library - Book information
+-  Numbers & Trivia - Fun facts
 
 **Customization**
 - Three tone options: Friendly, Academic, Power-User
@@ -36,7 +36,7 @@
 
 ## Usage
 
-Select text (≤4 words) → popup appears → click ⚙️ for settings or ☀️/🌙 for theme
+Select text (≤4 words) → popup appears
 
 ## Browser Compatibility
 
